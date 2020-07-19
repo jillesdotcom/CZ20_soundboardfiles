@@ -1,35 +1,44 @@
-# Initial author: Renze Nicolai
-# Added multiple pages by: Jilles Groenendijk
+# 1.00 - Initial version by Renze Nicolai
+# 1.01 - Added option to select 16 pages, allowing 256 samples
+# 1.02 - Fixed error sample didn't work after switching to non existing one
 
-import system, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
+import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
 
-MAX_FILES = 4
-MAX_PAGES = 16
+MAX_FILES	= 4
+MAX_PAGES	= 16
+FILE_PATH	= "/sd/"
+
 sndmixer.begin(MAX_FILES)
 
-global_playing   = [False]*MAX_FILES
-global_file      = [None]*MAX_FILES
-global_channels  = [None]*MAX_FILES
-global_filenames = [""]*MAX_FILES
-global_page      = 0
+global_playing		= [False]*MAX_FILES
+global_file			= [None]*MAX_FILES
+global_channels		= [None]*MAX_FILES
+global_filenames	= [""]*MAX_FILES
+global_page			= 0
 
 def load_file(filename):
 	global global_playing, global_file, global_channels, global_filenames, MAX_FILES
-	try:
-		for i in range(MAX_FILES):
-			if global_filenames[i] == filename:
-				print("File already open",filename,"in slot",i)
-				return i
-		for i in range(MAX_FILES):
-			if not global_playing[i]:
-				if global_file[i]:
-					global_file[i].close()
-				global_file[i] = open(filename, "rb")
-				global_filenames[i] = filename
-				print("Opened file",filename,"in slot",i)
-				return i
-	except:
-		print("Failed to open",filename)
+
+	if filename in os.listdir(FILE_PATH):
+		try:
+			for i in range(MAX_FILES):
+				if global_filenames[i] == filename:
+					print("File already open",FILE_PATH+filename,"in slot",i)
+					return i
+			for i in range(MAX_FILES):
+				if not global_playing[i]:
+					if global_file[i]:
+						global_file[i].close()
+					global_file[i] = open(FILE_PATH+filename, "rb")
+					global_filenames[i] = filename
+					print("Opened file",FILE_PATH+filename,"in slot",i)
+					return i
+		except:
+			print("Failed to open",filename)
+	else:
+		print(filename,"does not exists")
+		return None
+		
 	return None
 
 def draw(button, active, error=False):
@@ -82,11 +91,13 @@ def stop(index):
 	fd.seek(0)
 
 def on_key(key_index, pressed):
-	global global_page
+	
+	print("Key",key_index,"on page",global_page,"pressed" if pressed else "released")
 
-	print("Key",key_index,"on page ",global_page,"pressed" if pressed else "released")
-	index = load_file("/sd/sound{}.mp3".format((MAX_PAGES*global_page)+key_index))
-	print("/sd/sound{}.mp3".format((MAX_PAGES*global_page)+key_index),index)
+	filename = "sound{}.mp3".format((MAX_PAGES*global_page)+key_index)
+	index = load_file(filename)
+
+	print("index",index)
 	if index != None:
 		draw(key_index, pressed, False)
 		if pressed:
@@ -98,21 +109,24 @@ def on_key(key_index, pressed):
 
 def on_touch(pressed):
 	global global_page
-	
-	if pressed == touchpads.LEFT:
-		if global_page>0:
-			global_page=global_page-1
-		else:
-			global_page=MAX_PAGES
 
-	if pressed == touchpads.RIGHT:
-		if global_page<MAX_PAGES:
-			global_page=global_page+1
-		else:
-			global_page=0
-	draw(global_page,True)
-	draw(global_page,False)
+	if pressed==0:
+		draw(global_page,False)
+	else:
+		if pressed == touchpads.LEFT:
+			if global_page>0:
+				global_page=global_page-1
+			else:
+				global_page=MAX_PAGES
 
+		if pressed == touchpads.RIGHT:
+			if global_page<MAX_PAGES:
+				global_page=global_page+1
+			else:
+				global_page=0
+		draw(global_page,True)
+
+touchpads.on(touchpads.OK, on_touch)
 touchpads.on(touchpads.LEFT, on_touch)
 touchpads.on(touchpads.RIGHT, on_touch)
 
