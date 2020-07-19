@@ -2,6 +2,7 @@
 # 1.01 - Added option to select 16 pages, allowing 256 samples
 # 1.02 - Fixed error sample didn't work after switching to non existing one
 # 1.03 - Fixed page 15 error, added cancel to go to page 1.
+# 1.04 - Files now in dirs
 
 #	Usage:
 #		Play sample while holding the button (up to 4 at once)
@@ -19,16 +20,15 @@
 #		Right  - Next page
 #
 #	Sample files:
-#		Page  1:   sound0.mp3 -  sound15.mp3
-#		Page  2:  sound16.mp3 -  sound31.mp3
-#		page 16: sound240.mp3 - sound255.mp3
+#		/soundboard/page<page nr>/sound0.mp3 -  sound15.mp3
 
 #import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
-import os, display, keypad, touchpads, sndmixer
+import appconfig, os, display, keypad, touchpads, sndmixer
 
+settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard"})
+print(settings['SampleFolder'])
 MAX_FILES	= 4
 MAX_PAGES	= 16
-FILE_PATH	= "/sd/"
 
 sndmixer.begin(MAX_FILES)
 
@@ -41,24 +41,27 @@ global_page			= 0
 def load_file(filename):
 	global global_playing, global_file, global_channels, global_filenames, MAX_FILES
 
-	if filename in os.listdir(FILE_PATH):
-		try:
+	filepath = settings["SampleFolder"]+"/page"+str(global_page)+"/"+filename
+
+	try:
+		if filename in os.listdir(settings["SampleFolder"]+"/page"+str(global_page)):
 			for i in range(MAX_FILES):
-				if global_filenames[i] == filename:
-					print("File already open",FILE_PATH+filename,"in slot",i)
+				if global_filenames[i] == filepath:
+					print("File already open",filepath,"in slot",i)
 					return i
 			for i in range(MAX_FILES):
 				if not global_playing[i]:
 					if global_file[i]:
 						global_file[i].close()
-					global_file[i] = open(FILE_PATH+filename, "rb")
-					global_filenames[i] = filename
-					print("Opened file",FILE_PATH+filename,"in slot",i)
+					global_file[i] = open(filepath, "rb")
+					global_filenames[i] = filepath
+					print("Opened file",filepath,"in slot",i)
 					return i
-		except:
-			print("Failed to open",filename)
-	else:
-		print(filename,"does not exist")
+		else:
+			print(filepath,"does not exist")
+			return None
+	except:
+		print("Failed to open",filepath)
 		return None
 		
 	return None
@@ -116,7 +119,7 @@ def on_key(key_index, pressed):
 	
 	print("Key",key_index,"on page",global_page,"pressed" if pressed else "released")
 
-	filename = "sound{}.mp3".format((MAX_PAGES*global_page)+key_index)
+	filename = "sound{}.mp3".format(key_index)
 	index = load_file(filename)
 
 	if index != None:
@@ -147,6 +150,7 @@ def on_touch(pressed):
 				global_page=global_page+1
 			else:
 				global_page=0
+
 		draw(global_page,True)
 	print("new page",global_page)
 
@@ -156,3 +160,5 @@ touchpads.on(touchpads.RIGHT, on_touch)
 touchpads.on(touchpads.CANCEL, on_touch)
 
 keypad.add_handler(on_key)
+draw(global_page,True)
+draw(global_page,False)
