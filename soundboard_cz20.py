@@ -1,7 +1,7 @@
 # 1.00 - Initial version by Renze Nicolai
 # 1.01 - Added option to select 16 pages, allowing 256 samples
 # 1.02 - Fixed error sample didn't work after switching to non existing one
-# 1.03 - Fixed page 15 error, added cancel to go to page 1. cancel is homebutton
+# 1.03 - Fixed page 15 error, added cancel to go to page 1.
 
 #	Usage:
 #		Play sample while holding the button (up to 4 at once)
@@ -23,7 +23,8 @@
 #		Page  2:  sound16.mp3 -  sound31.mp3
 #		page 16: sound240.mp3 - sound255.mp3
 
-import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
+#import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
+import os, display, keypad, touchpads, sndmixer
 
 MAX_FILES	= 4
 MAX_PAGES	= 16
@@ -57,7 +58,7 @@ def load_file(filename):
 		except:
 			print("Failed to open",filename)
 	else:
-		print(filename,"does not exists")
+		print(filename,"does not exist")
 		return None
 		
 	return None
