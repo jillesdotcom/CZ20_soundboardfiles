@@ -1,6 +1,27 @@
 # 1.00 - Initial version by Renze Nicolai
 # 1.01 - Added option to select 16 pages, allowing 256 samples
 # 1.02 - Fixed error sample didn't work after switching to non existing one
+# 1.03 - Fixed page 15 error, added cancel to go to page 1. cancel is homebutton
+
+#	Usage:
+#		Play sample while holding the button (up to 4 at once)
+#
+#	Requires:
+#		MP3 Samples on the SD Card
+#
+#	Button:
+#		Play sample 
+#
+#	Touchpad:
+#		Ok     - Show current page
+#		Cancel - Go to Page 1
+#		Left   - Previous page
+#		Right  - Next page
+#
+#	Sample files:
+#		Page  1:   sound0.mp3 -  sound15.mp3
+#		Page  2:  sound16.mp3 -  sound31.mp3
+#		page 16: sound240.mp3 - sound255.mp3
 
 import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
 
@@ -97,7 +118,6 @@ def on_key(key_index, pressed):
 	filename = "sound{}.mp3".format((MAX_PAGES*global_page)+key_index)
 	index = load_file(filename)
 
-	print("index",index)
 	if index != None:
 		draw(key_index, pressed, False)
 		if pressed:
@@ -113,21 +133,25 @@ def on_touch(pressed):
 	if pressed==0:
 		draw(global_page,False)
 	else:
+		if pressed == touchpads.CANCEL:
+			global_page=0
 		if pressed == touchpads.LEFT:
 			if global_page>0:
 				global_page=global_page-1
 			else:
-				global_page=MAX_PAGES
+				global_page=(MAX_PAGES-1)
 
 		if pressed == touchpads.RIGHT:
-			if global_page<MAX_PAGES:
+			if global_page<(MAX_PAGES-1):
 				global_page=global_page+1
 			else:
 				global_page=0
 		draw(global_page,True)
+	print("new page",global_page)
 
 touchpads.on(touchpads.OK, on_touch)
 touchpads.on(touchpads.LEFT, on_touch)
 touchpads.on(touchpads.RIGHT, on_touch)
+touchpads.on(touchpads.CANCEL, on_touch)
 
 keypad.add_handler(on_key)
