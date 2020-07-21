@@ -3,6 +3,7 @@
 # 1.02 - Fixed error sample didn't work after switching to non existing one
 # 1.03 - Fixed page 15 error, added cancel to go to page 1.
 # 1.04 - Files now in dirs
+# 1.05 - Adhere to volume settings + boot animation
 
 #	Usage:
 #		Play sample while holding the button (up to 4 at once)
@@ -14,23 +15,27 @@
 #		Play sample 
 #
 #	Touchpad:
-#		Ok     - Show current page
+#		Ok	 - Show current page
 #		Cancel - Go to Page 1
 #		Left   - Previous page
 #		Right  - Next page
 #
 #	Sample files:
 #		/soundboard/page<page nr>/sound0.mp3 -  sound15.mp3
-
+#
+#	Conversion via FFMPEG:
+#		ffmpeg -i original.mp3 -ar 22050 -ac 1  -b:a 128k soundboardfile.mp3
+#
 #import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
-import appconfig, os, display, keypad, touchpads, sndmixer
+import system, os, time, machine, appconfig, os, display, keypad, touchpads, sndmixer
 
 settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard"})
-print(settings['SampleFolder'])
+print("Samplefolder:",settings['SampleFolder'])
+
 MAX_FILES	= 4
 MAX_PAGES	= 16
 
-sndmixer.begin(MAX_FILES)
+sndmixer.begin(MAX_FILES, False)
 
 global_playing		= [False]*MAX_FILES
 global_file			= [None]*MAX_FILES
@@ -87,6 +92,9 @@ def play(index):
 		print("Play: invalid channel id")
 		return
 	try:
+		volume = machine.nvs_getint("system", "volume") or 255
+		print("Volume:",volume)
+		sndmixer.volume(channel, volume)
 		sndmixer.play(channel)
 	except:
 		pass
@@ -160,5 +168,15 @@ touchpads.on(touchpads.RIGHT, on_touch)
 touchpads.on(touchpads.CANCEL, on_touch)
 
 keypad.add_handler(on_key)
-draw(global_page,True)
-draw(global_page,False)
+
+for p in range(0,16):
+	nofilesfound=True
+	for b in range(0,16):
+		filename=settings["SampleFolder"]+"/page"+str(p)+"/sound"+str(b)+".mp3"
+		if os.path.isfile(filename):
+			nofilesfound=False
+	draw(p,True,nofilesfound)
+
+for i in range(0,16):
+	time.sleep(0.1)
+	draw(15-i,False)
