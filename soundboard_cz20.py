@@ -4,6 +4,7 @@
 # 1.03 - Fixed page 15 error, added cancel to go to page 1.
 # 1.04 - Files now in dirs
 # 1.05 - Adhere to volume settings + boot animation
+# 1.06 - Option to toggle boot animation
 
 #	Usage:
 #		Play sample while holding the button (up to 4 at once)
@@ -26,11 +27,15 @@
 #	Conversion via FFMPEG:
 #		ffmpeg -i original.mp3 -ar 22050 -ac 1  -b:a 128k soundboardfile.mp3
 #
+#	Demo samples:
+#		https://github.com/jillesdotcom/CZ20_soundboardfiles
+#
 #import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
 import system, os, time, machine, appconfig, os, display, keypad, touchpads, sndmixer
 
-settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard"})
+settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard","BootAnimation": True})
 print("Samplefolder:",settings['SampleFolder'])
+print("BootAnimation:",settings['BootAnimation'])
 
 MAX_FILES	= 4
 MAX_PAGES	= 16
@@ -46,6 +51,7 @@ global_page			= 0
 def load_file(filename):
 	global global_playing, global_file, global_channels, global_filenames, MAX_FILES
 
+	settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard","BootAnimation": True})
 	filepath = settings["SampleFolder"]+"/page"+str(global_page)+"/"+filename
 
 	try:
@@ -169,14 +175,19 @@ touchpads.on(touchpads.CANCEL, on_touch)
 
 keypad.add_handler(on_key)
 
-for p in range(0,16):
-	nofilesfound=True
-	for b in range(0,16):
-		filename=settings["SampleFolder"]+"/page"+str(p)+"/sound"+str(b)+".mp3"
-		if os.path.isfile(filename):
-			nofilesfound=False
-	draw(p,True,nofilesfound)
+if settings['BootAnimation']:
+	for p in range(0,16):
+		nofilesfound=True
+		for b in range(0,16):
+			filename=settings["SampleFolder"]+"/page"+str(p)+"/sound"+str(b)+".mp3"
+			if os.path.isfile(filename):
+				nofilesfound=False
+		draw(p,True,nofilesfound)
 
-for i in range(0,16):
+	for i in range(0,16):
+		time.sleep(0.1)
+		draw(15-i,False)
+else:
+	draw(0,True)
 	time.sleep(0.1)
-	draw(15-i,False)
+	draw(0,False)
