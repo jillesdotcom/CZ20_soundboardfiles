@@ -5,6 +5,7 @@
 #
 # Version:
 # 1.00 - Initial release
+# 1.01 - added launcher
 #
 import os, wifi, ugTTS
 
@@ -30,3 +31,4 @@ else:
 			if(filesize==0):
 				print("Dummy file:"+filename+" creating TTS")
 				ugTTS.text_to_mp3(appname, filename)
+system.launcher()

@@ -31,7 +31,7 @@
 #		https://github.com/jillesdotcom/CZ20_soundboardfiles
 #
 #import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
-import system, os, time, machine, appconfig, os, display, keypad, touchpads, sndmixer
+import system, os, time, machine, appconfig, display, keypad, touchpads, sndmixer
 
 settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard","BootAnimation": True})
 print("Samplefolder:",settings['SampleFolder'])
