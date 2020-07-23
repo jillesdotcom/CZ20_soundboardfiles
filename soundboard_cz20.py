@@ -5,6 +5,7 @@
 # 1.04 - Files now in dirs
 # 1.05 - Adhere to volume settings + boot animation
 # 1.06 - Option to toggle boot animation
+# 1.07 - Show folder empty / filled while navigating (thx @elborro)
 
 #	Usage:
 #		Play sample while holding the button (up to 4 at once)
@@ -30,8 +31,7 @@
 #	Demo samples:
 #		https://github.com/jillesdotcom/CZ20_soundboardfiles
 #
-#import system, os, display, keypad, touchpads, machine, sndmixer, virtualtimers as vt, random
-import system, os, time, machine, appconfig, display, keypad, touchpads, sndmixer
+import os, time, machine, appconfig, display, keypad, touchpads, sndmixer
 
 settings = appconfig.get("soundboard", {"SampleFolder": "/sd/soundboard","BootAnimation": True})
 print("Samplefolder:",settings['SampleFolder'])
@@ -46,6 +46,7 @@ global_playing		= [False]*MAX_FILES
 global_file			= [None]*MAX_FILES
 global_channels		= [None]*MAX_FILES
 global_filenames	= [""]*MAX_FILES
+global_page_empty   = [False]*MAX_PAGES
 global_page			= 0
 
 def load_file(filename):
@@ -165,7 +166,7 @@ def on_touch(pressed):
 			else:
 				global_page=0
 
-		draw(global_page,True)
+		draw(global_page,True,global_page_empty[global_page])
 	print("new page",global_page)
 
 touchpads.on(touchpads.OK, on_touch)
@@ -175,14 +176,17 @@ touchpads.on(touchpads.CANCEL, on_touch)
 
 keypad.add_handler(on_key)
 
+for p in range(0,16):
+	global_page_empty[p]=True
+	for b in range(0,16):
+		filename=settings["SampleFolder"]+"/page"+str(p)+"/sound"+str(b)+".mp3"
+		if os.path.isfile(filename):
+			global_page_empty[p]=False
+
 if settings['BootAnimation']:
 	for p in range(0,16):
-		nofilesfound=True
-		for b in range(0,16):
-			filename=settings["SampleFolder"]+"/page"+str(p)+"/sound"+str(b)+".mp3"
-			if os.path.isfile(filename):
-				nofilesfound=False
-		draw(p,True,nofilesfound)
+		draw(p,True,global_page_empty[p])
+	time.sleep(1)
 
 	for i in range(0,16):
 		time.sleep(0.1)
@@ -191,3 +195,4 @@ else:
 	draw(0,True)
 	time.sleep(0.1)
 	draw(0,False)
+    

@@ -7,7 +7,7 @@
 # 1.00 - Initial release
 # 1.01 - added launcher
 #
-import os, wifi, ugTTS
+import os, system, wifi, ugTTS
 
 wifi.connect()
 
